@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arduino Control Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    button {
+      margin: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .output {
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      display: inline-block;
+      min-width: 200px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Arduino Control Dashboard</h1>
+
+  <div class="section">
+    <h2>LED Control</h2>
+    <div>
+      <label>LED 1: </label>
+      <button onclick="controlLED(1, 'on')">ON</button>
+      <button onclick="controlLED(1, 'off')">OFF</button>
+    </div>
+    <div>
+      <label>LED 2: </label>
+      <button onclick="controlLED(2, 'on')">ON</button>
+      <button onclick="controlLED(2, 'off')">OFF</button>
+    </div>
+    <div>
+      <label>LED 3: </label>
+      <button onclick="controlLED(3, 'on')">ON</button>
+      <button onclick="controlLED(3, 'off')">OFF</button>
+    </div>
+    <div>
+      <label>LED 4: </label>
+      <button onclick="controlLED(4, 'on')">ON</button>
+      <button onclick="controlLED(4, 'off')">OFF</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Buzzer Control</h2>
+    <button onclick="controlBuzzer('on')">Turn ON</button>
+    <button onclick="controlBuzzer('off')">Turn OFF</button>
+  </div>
+
+  <div class="section">
+    <h2>Sensor Data (Individual)</h2>
+    <button onclick="getLDR()">Get LDR Value</button>
+    <div id="ldrOutput" class="output">LDR: --</div>
+
+    <br><br>
+
+    <button onclick="getDistance()">Get Distance</button>
+    <div id="distanceOutput" class="output">Distance: -- cm</div>
+  </div>
+
+  <div class="section">
+    <h2>Sensor Data (Combined JSON)</h2>
+    <button onclick="getAllSensorData()">Get All Sensor Data</button>
+    <div id="allSensorData" class="output">Distance: -- cm, LDR: --</div>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:8000";
+
+    function controlLED(led, state) {
+      fetch(`${BASE_URL}/led/${led}/${state}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => alert(`LED ${led} ${state.toUpperCase()}: ${data.result}`))
+        .catch(err => console.error(err));
+    }
+
+    function controlBuzzer(state) {
+      fetch(`${BASE_URL}/buzzer/${state}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => alert(`Buzzer ${state.toUpperCase()}: ${data.result}`))
+        .catch(err => console.error(err));
+    }
+
+    function getLDR() {
+      fetch(`${BASE_URL}/ldr`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("ldrOutput").innerText = `LDR: ${data.ldr_value}`;
+        })
+        .catch(err => console.error(err));
+    }
+
+    function getDistance() {
+      fetch(`${BASE_URL}/ultrasonic`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("distanceOutput").innerText = `Distance: ${data.distance_cm} cm`;
+        })
+        .catch(err => console.error(err));
+    }
+
+    function getAllSensorData() {
+      fetch(`${BASE_URL}/sensors`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("allSensorData").innerText = `Error: ${data.raw}`;
+          } else {
+            document.getElementById("allSensorData").innerText =
+              `Distance: ${data.distance} cm, LDR: ${data.ldr}`;
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  </script>
+
+</body>
+</html>
